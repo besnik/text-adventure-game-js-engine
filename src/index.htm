@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	
+	<title>Adventure Text Game Engine</title>
+	
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	
+	<!--<link rel="stylesheet" href="responsive1.css">-->
+</head>
+
+<body>
+
+<h1>Text Adventure Game Engine</h1>
+<div id="container"></div>
+
+<script src="engine/common/common.js"></script>
+<script src="engine/model/model.js"></script>
+<script src="engine/service/service.js"></script>
+<script src="engine/mock/mock.js"></script>
+
+<script src="game/config.js"></script>
+
+<script>
+	
+	var text = game.getText();
+	document.write(text);
+	
+</script>
+
+</body>
+
+</html>
