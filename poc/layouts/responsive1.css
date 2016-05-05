@@ -26,17 +26,17 @@ img {
 	margin: 0 0 10px 0;
 }
 
+/* Header */
+div.header {
+	background-color: #E9E9E9;
+	padding: 40px 0;
+}
+
 /* Inner Section */
 div.inner-section {
 	max-width: 800px;
 	padding: 0 25px;
 	margin: 0 auto;
-}
-
-/* Header */
-div.header {
-	background-color: #E9E9E9;
-	padding: 40px 0;
 }
 
 /* Game area */
