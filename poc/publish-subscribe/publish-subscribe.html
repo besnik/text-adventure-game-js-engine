@@ -26,7 +26,7 @@ var PubSub = function() {
             return;
         }
         
-       for (var i in this.events[e]) {
+        for (var i in this.events[e]) {
             this.events[e][i](data);
         }
     }
