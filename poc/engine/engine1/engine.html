@@ -41,7 +41,9 @@
         ];
         
         // TEST
-        var g = new Game(new Player(mockStartId), new Locations(mockLocationsItems));
+        var parser = new Parser();
+        var locations = parser.toLocations(mockLocationsItems);
+        var g = new Game(new Player(mockStartId), new Locations(locations));
         
         // get text of location
         document.getElementById("location").innerHTML = "LOCATION: " + g.location().text;
