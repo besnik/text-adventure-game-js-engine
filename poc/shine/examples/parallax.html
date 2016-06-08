@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html class="parallax">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link rel='stylesheet' type='text/css' media='all' href="../css/shine.css"/>
+	<title>Shine CSS - Parallax Demo</title>
+	<style type="text/css">
+		.background_1
+		{
+			background-image: url('../img/background.jpg');
+			background-position: left bottom;
+		}
+		.background_2
+		{
+			background-color:#556;
+			background-image: linear-gradient(30deg, #445 12%, transparent 12.5%, transparent 87%, #445 87.5%, #445),
+			linear-gradient(150deg, #445 12%, transparent 12.5%, transparent 87%, #445 87.5%, #445),
+			linear-gradient(30deg, #445 12%, transparent 12.5%, transparent 87%, #445 87.5%, #445),
+			linear-gradient(150deg, #445 12%, transparent 12.5%, transparent 87%, #445 87.5%, #445),
+			linear-gradient(60deg, #99a 25%, transparent 25.5%, transparent 75%, #99a 75%, #99a), 
+			linear-gradient(60deg, #99a 25%, transparent 25.5%, transparent 75%, #99a 75%, #99a);
+			background-size:80px 140px;
+			background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
+		}
+	</style>
+</head>
+<body class="parallax">
+	<div class="row top-0 z-index-top blue-bg white">
+		<div class="col-20 center md-padding">
+			<div class="pull-left"><h1 class="no-top-margin">Parallax Demo</h1></div>
+			<div class="pull-right sm-padding">
+				<ul>
+					<li class="inline lg-lt-padding">Log In</li>
+					<li class="inline">Register</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="parallax-section background_1 z-index-back">
+		<div class="parallax-content col-16 top-15 xl-padding center text-center white-translucent-bg white"><h1>This works with simple CSS classes</h1></div>
+	</div>
+	<div class="section md-vt-margin green-bg">
+		<h1 class="absolute margin-3-left top-15 deeppink">This is a section without background</h1>
+	</div>
+	<div class="parallax-section background_2 z-index-back">
+		<div class="white-translucent-bg yellow col-10 xl-margin lg-padding top-5 absolute cover right margin-4-right text-center"><h1>This is a sample text</h1></div>
+	</div>
+	<div class="section no-vt-margin violet-bg">
+		<h1 class="absolute margin-3-left top-15 white">That's all Folks!</h1>
+	</div>
+
+</body>
+</html>
+	
