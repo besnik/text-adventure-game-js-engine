@@ -10,7 +10,7 @@ fieldset, form, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
 article, aside, canvas, details, embed, footer, header, hgroup,
 menu, nav, output, section, summary,
-time, mark, audio, canvas, video{margin:0;padding:0;border:0;vertical-align:baseline;}
+time, mark, audio, canvas, video{margin:0;padding:0;border: 1px dashed red;vertical-align:baseline;}
 article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section{display:block;}
 audio,
