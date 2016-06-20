@@ -28,15 +28,49 @@ function log(message, isError, ex) {
     }
 }
 
+var PubSub = function() {
+    
+    // array of events. every event contains array of subscribed functions
+    this.events = {};
+    
+    // adds function to event
+    this.subscribe = function(e, listener) {
+        if (typeof e != "string") { throw new Error("ArgumentException: e. Expecting string. Actual value " + e); }
+        if (typeof listener != "function") { throw new Error("ArgumentException: listener. Expecting function. Actual value " + listener); }
+        
+        if (this.events[e] == undefined) { 
+            this.events[e] = [];
+        }
+        
+        this.events[e].push(listener);
+    }
+    
+    // calls functions subscribed for event with given data
+    this.publish = function(e, data) {
+        if (typeof e != "string") { throw new Error("ArgumentException: e. Expecting string. Actual value " + e); }
+        
+        if (this.events[e] == undefined) { 
+            return;
+        }
+        
+        for (var i in this.events[e]) {
+            this.events[e][i](data);
+        }
+    }
+    
+}
 
 // MODEL ///////////////////////////////////////////////////////////////////////////////////
 
 var editor = {
     debug: true,
     game: {
-        id: "New game id"
+        id: "New game id",
     }
 }
+
+editor.game.events = new PubSub();
+editor.game.events.LevelAdded = "LevelAdded";
 
 editor.game.levels = {
     items: [],
@@ -46,7 +80,10 @@ editor.game.levels = {
         return result;
     },
     add: function(level) {
-        return this.items.push(level);
+        this.items.push(level);
+
+        log(editor.game.events.LevelAdded + " event firing")
+        editor.game.events.publish(editor.game.events.LevelAdded, level);
     }
 }
 
@@ -190,6 +227,7 @@ editor.ui.levelEditor.reset = function() {
 // GAME EDITOR VIEW ---------------------------------------------------------------------
 editor.ui.gameEditor.el = document.querySelector("#gameEditor");
 editor.ui.gameEditor.btnAddLevel = editor.ui.gameEditor.el.querySelector("#btnAddLevel");
+editor.ui.gameEditor.errorMsg = editor.ui.gameEditor.el.querySelector("#errorMsg");
 
 editor.ui.gameEditor.btnAddLevel.addEventListener("click", function() {
     log("Event: click, Element: Add Level button of Game Editor");
@@ -201,9 +239,52 @@ editor.ui.gameEditor.show = function() {
     editor.ui.showElement(editor.ui.gameEditor.el);
 }
 
+editor.ui.gameEditor.showErrorMsg = function(message) {
+    var el = editor.ui.gameEditor.errorMsg;
+    el.innerHTML = message;
+    editor.ui.showElement(el);
+}
+
+editor.ui.gameEditor.addLevelRow = function(level) {
+    log("Creating html for new level added");
+
+    try {
+        var row = document.createElement("div");
+        row.className = "row col-20 center sm-padding text-center";
+        
+        var divLevelId = document.createElement("div");
+        divLevelId.className = "row col-8 lightblue-bg";
+        divLevelId.innerText = level.id;
+        row.appendChild(divLevelId);
+
+        var divLevelName = document.createElement("div");
+        divLevelName.className = "row col-12 lightgreen-bg";
+        divLevelName.innerText = level.name;
+        row.appendChild(divLevelName);
+
+        var divButton = document.createElement("div");
+        divButton.className = "row col-4 lightgreen-bg sm-padding";
+        row.appendChild(divButton);
+
+        var button = document.createElement("button");
+        button.className = "btn btn-primary no-margin";
+        button.innerText = "Edit";
+        button.setAttribute("levelid", level.id);
+        divButton.appendChild(button);
+
+        // insert into game editor
+        var levelContainer = editor.ui.gameEditor.el.querySelector("#levelContainer");
+        levelContainer.appendChild(row);
+    }
+    catch (ex) {
+        log("Failed to create and append html row for level.", true, ex);
+        editor.ui.gameEditor.showErrorMsg("ERROR: Failed to create and append html row for level. " + ex.message);
+    }
+}
+
 
 
 // CONTROLLER
-
+editor.game.events.subscribe(editor.game.events.LevelAdded, editor.ui.gameEditor.addLevelRow);
 
 
