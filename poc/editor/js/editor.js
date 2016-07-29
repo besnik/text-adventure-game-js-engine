@@ -54,7 +54,9 @@ var PubSub = function() {
         }
         
         for (var i in this.events[e]) {
-            this.events[e][i](data);
+            //this.events[e][i](data);
+            this.events[e][i].call(null, data);
+        
         }
     }
     
@@ -250,20 +252,20 @@ editor.ui.gameEditor.addLevelRow = function(level) {
 
     try {
         var row = document.createElement("div");
-        row.className = "row col-20 center sm-padding text-center";
+        row.className = "row col-20 center sm-padding text-center lightyellow-bg xm-vt-margin";
         
         var divLevelId = document.createElement("div");
-        divLevelId.className = "row col-8 lightblue-bg";
+        divLevelId.className = "row col-8";
         divLevelId.innerText = level.id;
         row.appendChild(divLevelId);
 
         var divLevelName = document.createElement("div");
-        divLevelName.className = "row col-12 lightgreen-bg";
+        divLevelName.className = "row col-12";
         divLevelName.innerText = level.name;
         row.appendChild(divLevelName);
 
         var divButton = document.createElement("div");
-        divButton.className = "row col-4 lightgreen-bg sm-padding";
+        divButton.className = "row col-4 sm-padding";
         row.appendChild(divButton);
 
         var button = document.createElement("button");
