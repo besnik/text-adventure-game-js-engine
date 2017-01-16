@@ -27,13 +27,15 @@ var Editor = function() {
     this.add_listener = function(event_name, event_handler) { this.game.events.subscribe(event_name, event_handler); return this; }
     // when player goes to a location
     this.when_location_changed_to = function(location_id) {
-        return new ConditionActionBinder(this, "location_changed", new LocationCondition(location_id));
+        return new ActionSelector(this, "location_changed", new LocationCondition(location_id));
     }
 }
 
 // condition that checks if player entered (is already on) specific location
 var LocationCondition = function(location_id) {
+    // id of location where player must be located so the condition is true
     this.location_id = location_id;
+    // validates state of model
     this.is_valid = function(engine) { return engine.player.location_id === this.location_id; }
 }
 
@@ -43,17 +45,30 @@ var NoCondition = function() {
 }
 
 // action that changes state of specific location if condition is meet
-var SetLocationStateAction = function(location_id, new_state, condition) {
+var SetLocationStateAction = function(location_id, new_state, condition, repeat) {
+    // id of location whose state is going to be modified
     this.location_id = location_id;
+    // new state of specified location
     this.new_state = new_state;
-    this.condition = condition;
+    // condition that needs to be true so the state of location is changed
+    this.condition = typeof condition !== 'undefined' ? condition : new NoCondition();
+    // should action be executed only once or every time the event and condition are met
+    this.repeat = typeof repeat !== 'undefined' ? repeat : false;
+    // flag to indicate if action ran once
+    this.executed = false;
+    // executes action if conditions are met
     this.execute = function(engine) {
-        if (condition.is_valid(engine)) { engine.locations.get(this.location_id).state = this.new_state; }
+        // if allowed repeated execution => check for validy and execute
+        // if repeated execution is not allowed and action haven't ran yet => check for validity and execute
+        if ((this.repeat || !this.executed) && condition.is_valid(engine)) { 
+            engine.locations.get(this.location_id).state = this.new_state;
+            this.executed = true;
+        }
     }
 }
 
 // Binds conditions and actions together
-var ConditionActionBinder = function(editor, event_type, condition) {
+var ActionSelector = function(editor, event_type, condition) {
     this.editor = editor;
     this.event_type = event_type;
     this.condition = condition;
