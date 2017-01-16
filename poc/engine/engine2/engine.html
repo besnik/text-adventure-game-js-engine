@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+</head>
+
+<body>
+    
+    <script src="engine.js"></script>
+    
+    <div id="container">
+        <div id="location"></div>
+        <div id="go"></div>
+    </div>
+    
+    <script>
+        // VIEW
+        function to_view_data(engine) {
+            // get text for current location
+            location_text = engine.location().get_text();
+            // get text for current location links
+            links_text = "";
+            links = engine.location().links;
+            for (var i in links) { links_text += ", " + links[i].text; }
+            links_text = links_text.substr(2);
+            // wrap and return
+            return {
+                text: location_text,
+                links: links_text
+            };
+        }
+
+        function update_ui(data) {
+            // convert model to view data
+            var view_data = to_view_data(data.engine);
+            // output to console if possible
+            if (console) {
+                console.log("LOCATION: " + view_data.text);
+                console.log("GO: " + view_data.links);
+            }
+            // update UI
+            document.getElementById("location").innerHTML = "LOCATION: " + view_data.text;
+            document.getElementById("go").innerHTML = "GO: " + view_data.links;
+        }
+
+        // SETUP GAME
+        var editor = new Editor();
+
+        var l1 = editor.factory.location
+            .new()
+            .id("l1")
+            .set_text("default", "l1 location text")
+            .set_text("modified", "l1 modified location text")
+            .add_link("l2", "to l2")
+            .build();
+
+        var l2 = editor.factory.location
+            .new()
+            .id("l2")
+            .set_text("default", "l2 location text")
+            .add_link("l1", "to l1")
+            .build();
+
+        game = editor.new_game()
+            .add_location(l1)
+            .add_location(l2)
+            .set_player_location(l1.id)
+            .add_listener("update_ui", update_ui)
+            .add_listener("location_changed", update_ui)
+            //.when_location_changed_to("l2").change_location_state("l1", "changed")
+            .start_game();
+
+        // PLAY GAME
+        
+    </script>
+    
+</body>
+
+</html>
