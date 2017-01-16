@@ -68,7 +68,7 @@
             .set_player_location(l1.id)
             .add_listener("update_ui", update_ui)
             .add_listener("location_changed", update_ui)
-            //.when_location_changed_to("l2").change_location_state("l1", "changed")
+            .when_location_changed_to("l2").set_state_of_location("l1", "modified")
             .start_game();
 
         // PLAY GAME

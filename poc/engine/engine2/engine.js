@@ -27,19 +27,43 @@ var Editor = function() {
     this.add_listener = function(event_name, event_handler) { this.game.events.subscribe(event_name, event_handler); return this; }
     // when player goes to a location
     this.when_location_changed_to = function(location_id) {
-        var action = new EditorAction(this, "location_changed");
-        action.location_id = location_id;
-        return action;
+        return new ConditionActionBinder(this, "location_changed", new LocationCondition(location_id));
     }
 }
 
-// Editor's actions to subscribe function for events in game engine
-var EditorAction = function(editor, event_type) {
+// condition that checks if player entered (is already on) specific location
+var LocationCondition = function(location_id) {
+    this.location_id = location_id;
+    this.is_valid = function(engine) { return engine.player.location_id === this.location_id; }
+}
+
+// condition that always returns true. use when you don't want to specify condition
+var NoCondition = function() {
+    this.is_valid = function() { return true; }
+}
+
+// action that changes state of specific location if condition is meet
+var SetLocationStateAction = function(location_id, new_state, condition) {
+    this.location_id = location_id;
+    this.new_state = new_state;
+    this.condition = condition;
+    this.execute = function(engine) {
+        if (condition.is_valid(engine)) { engine.locations.get(this.location_id).state = this.new_state; }
+    }
+}
+
+// Binds conditions and actions together
+var ConditionActionBinder = function(editor, event_type, condition) {
     this.editor = editor;
     this.event_type = event_type;
+    this.condition = condition;
 
-    this.change_location_state = function(location_id, new_state) {
-        // subscribe to this.editor.game.events
+    this.set_state_of_location = function(location_id, new_state) {
+        // couple condition and action as single entity
+        var action = new SetLocationStateAction(location_id, new_state, condition);
+        // bind entity to event
+        this.editor.game.events.subscribe(this.event_type, function(data) { action.execute(data.engine); });
+        // back to editor to allow fluent interface
         return this.editor;
     }
 }
@@ -53,6 +77,8 @@ var Engine = function() {
     this.locations = new LocationRepository();
     // events engine
     this.events = new PubSub();
+    // dictionary with array of event handlers for each event
+    this.event_handlers = {};
     // get current location
     this.location = function() { return this.locations.get(this.player.location_id); }
     // print what you see in current location
@@ -68,15 +94,6 @@ var Engine = function() {
         // fire event location changed
         this.publish.location_changed({ engine: this });
         return this;
-    }
-    // handlers
-    this.handle_location_changed = function(data) {
-        new_location_id = data.engine.player.location_id;
-
-        // read conditions->actions map
-
-        // if all conditions ok, execute action
-
     }
     // helper methods for publishing events
     // IMPORTANT: func definition overrides "this" keyword. call engine using data.engine
