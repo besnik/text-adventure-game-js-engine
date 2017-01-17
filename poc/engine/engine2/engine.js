@@ -8,11 +8,11 @@ var Editor = function() {
     // initializes empty new game engine
     this.new_game = function() { this.game = new Engine(); return this; }
     // factories that helps creating configuration
-    this.factory = {
-        location: new LocationFactory()
-    }
+    this.factory = { location: new LocationFactory() }
+    // converts game engine into json text
+    this.to_json = function() { return new EngineSerializer().to_json(this.game); }
     // loads game configuration from json file
-    this.load_game = function(json) {}
+    this.from_json = function(json_data) { this.game = new EngineSerializer().from_json(json_data); return this; }
     // returns game engine object ready to be played
     this.start_game = function() { this.game.see(); return this.game; }
     // specifies event 
@@ -31,56 +31,40 @@ var Editor = function() {
     }
 }
 
-// condition that checks if player entered (is already on) specific location
-var LocationCondition = function(location_id) {
-    // id of location where player must be located so the condition is true
-    this.location_id = location_id;
-    // validates state of model
-    this.is_valid = function(engine) { return engine.player.location_id === this.location_id; }
-}
-
-// condition that always returns true. use when you don't want to specify condition
-var NoCondition = function() {
-    this.is_valid = function() { return true; }
-}
-
-// action that changes state of specific location if condition is meet
-var SetLocationStateAction = function(location_id, new_state, condition, repeat) {
-    // id of location whose state is going to be modified
-    this.location_id = location_id;
-    // new state of specified location
-    this.new_state = new_state;
-    // condition that needs to be true so the state of location is changed
-    this.condition = typeof condition !== 'undefined' ? condition : new NoCondition();
-    // should action be executed only once or every time the event and condition are met
-    this.repeat = typeof repeat !== 'undefined' ? repeat : false;
-    // flag to indicate if action ran once
-    this.executed = false;
-    // executes action if conditions are met
-    this.execute = function(engine) {
-        // if allowed repeated execution => check for validy and execute
-        // if repeated execution is not allowed and action haven't ran yet => check for validity and execute
-        if ((this.repeat || !this.executed) && condition.is_valid(engine)) { 
-            engine.locations.get(this.location_id).state = this.new_state;
-            this.executed = true;
-        }
-    }
-}
-
 // Binds conditions and actions together
 var ActionSelector = function(editor, event_type, condition) {
     this.editor = editor;
     this.event_type = event_type;
-    this.condition = condition;
+    this.condition = typeof condition !== 'undefined' ? condition : new NoCondition();
 
     this.set_state_of_location = function(location_id, new_state) {
         // couple condition and action as single entity
         var action = new SetLocationStateAction(location_id, new_state, condition);
+        // store entity (so editor can later render json if needed)
+        this.editor.game.actions.push(action);
         // bind entity to event
         this.editor.game.events.subscribe(this.event_type, function(data) { action.execute(data.engine); });
         // back to editor to allow fluent interface
         return this.editor;
     }
+}
+
+// Converts game engine to/from json
+var EngineSerializer = function() {
+    // serializes model to json data
+    this.to_json = function(engine) {
+        var model = { 
+            name: "Text Adventure Game Configuration", 
+            version: "1.0",
+            locations: engine.locations.all(),
+            player: engine.player,
+            actions: engine.actions // convert to model, add name automatically and remove private variables (by providing custom function to JSON.stringify and _ to private fields)
+        }
+
+        return JSON.stringify(model, null, 2);
+    }
+    // deserializes model from json data
+    this.from_json = function(json_data) {}
 }
 
 // Game engine
@@ -92,8 +76,8 @@ var Engine = function() {
     this.locations = new LocationRepository();
     // events engine
     this.events = new PubSub();
-    // dictionary with array of event handlers for each event
-    this.event_handlers = {};
+    // list of actions with conditions to be executed for an event. used only by editor to render json.
+    this.actions = [];
     // get current location
     this.location = function() { return this.locations.get(this.player.location_id); }
     // print what you see in current location
@@ -115,6 +99,48 @@ var Engine = function() {
     this.publish = {
         update_ui: function(data) { data.engine.events.publish("update_ui", data); },
         location_changed: function(data) { data.engine.events.publish("location_changed", data); }
+    }
+}
+
+// condition that checks if player entered (is already on) specific location
+var LocationCondition = function(location_id) {
+    // name of type. used for json serialization
+    this.name = this.constructor.name;
+    // id of location where player must be located so the condition is true
+    this.location_id = location_id;
+    // validates state of model
+    this.is_valid = function(engine) { return engine.player.location_id === this.location_id; }
+}
+
+// condition that always returns true. use when you don't want to specify condition
+var NoCondition = function() {
+    // name of type. used for json serialization
+    this.name = this.constructor.name;
+    this.is_valid = function() { return true; }
+}
+
+// action that changes state of specific location if condition is meet
+var SetLocationStateAction = function(location_id, new_state, condition, repeat) {
+    // name of type. used for json serialization
+    this.name = this.constructor.name;
+    // id of location whose state is going to be modified
+    this.location_id = location_id;
+    // new state of specified location
+    this.new_state = new_state;
+    // condition that needs to be true so the state of location is changed
+    this.condition = typeof condition !== 'undefined' ? condition : new NoCondition();
+    // should action be executed only once or every time the event and condition are met
+    this.repeat = typeof repeat !== 'undefined' ? repeat : false;
+    // flag to indicate if action ran once
+    this.executed = false;
+    // executes action if conditions are met
+    this.execute = function(engine) {
+        // if allowed repeated execution => check for validy and execute
+        // if repeated execution is not allowed and action haven't ran yet => check for validity and execute
+        if ((this.repeat || !this.executed) && condition.is_valid(engine)) { 
+            engine.locations.get(this.location_id).state = this.new_state;
+            this.executed = true;
+        }
     }
 }
 
@@ -192,6 +218,8 @@ var LocationRepository = function() {
     this.remove = function(l) { delete this.locations[l.id]; }
     // gets location from repository
     this.get = function(id) { return this.locations[id]; }
+    // gets all locations as array
+    this.all = function() { list = []; for (var id in this.locations) list.push(this.get(id)); return list; }
 }
 
 // Publish-Subscribe engine

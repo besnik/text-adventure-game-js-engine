@@ -71,6 +71,16 @@
             .when_location_changed_to("l2").set_state_of_location("l1", "modified")
             .start_game();
 
+        json_data = editor.new_game()
+            .add_location(l1)
+            .add_location(l2)
+            .set_player_location(l1.id)
+            .add_listener("update_ui", update_ui)
+            .add_listener("location_changed", update_ui)
+            .when_location_changed_to("l2").set_state_of_location("l1", "modified")
+            .to_json();
+        console.log(json_data);
+
         // PLAY GAME
         
     </script>
