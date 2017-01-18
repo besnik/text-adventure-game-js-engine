@@ -63,6 +63,18 @@ var EngineSerializer = function() {
 
         return JSON.stringify(model, null, 2);
     }
+
+    // todo: refactor to condition_factory so there is single method to instantiate conditions
+    // parses model from json into Condtion model
+    this.condition_parser = {};
+    this.condition_parser["NoCondition"] = function(c) { return new NoCondition(); }
+    this.condition_parser["LocationCondition"] = function(c) { return new LocationCondition(c.location_id); }
+
+    // todo: refactor to action_factory so there is single method to instantiate action
+    // parses model from json into Action model
+    this.action_parser = {}
+    this.action_parser["SetLocationStateAction"] = function(a,c) { return new SetLocationStateAction(a.location_id, a.new_state, c, a.repeat) }
+
     // deserializes game engine from json data
     this.from_json = function(json_data) {
         // parse json string
@@ -93,7 +105,17 @@ var EngineSerializer = function() {
             editor.add_location(l);
         }
         // set actions
+        for (var i=0; i<model.actions.length; i++) {
+            // get settings from parsed json
+            var action_settings = model.actions[i];
+            // reconstruct condition
+            var condition = this.condition_parser[action_settings.condition.name](action_settings.condition);
+            // reconstruct action
+            var action = this.action_parser[action_settings.name](action_settings, c);
 
+            // todo: subscribe for event (need instance of editor/game engine)
+            // where is good place to store event_type? condition, action, separated?-.for(event).when().do()
+        }
 
 
         return editor.start_game();
@@ -135,6 +157,7 @@ var Engine = function() {
     }
 }
 
+// todo: refactor to dictionary and anonymous func like condition_parser?
 // condition that checks if player entered (is already on) specific location
 var LocationCondition = function(location_id) {
     // name of type. used for json serialization
