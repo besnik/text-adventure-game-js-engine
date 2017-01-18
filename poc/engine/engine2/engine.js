@@ -63,8 +63,41 @@ var EngineSerializer = function() {
 
         return JSON.stringify(model, null, 2);
     }
-    // deserializes model from json data
-    this.from_json = function(json_data) {}
+    // deserializes game engine from json data
+    this.from_json = function(json_data) {
+        // parse json string
+        var model = JSON.parse(json_data);
+        // use editor instance to reconstruct game engine using data from json
+        var editor = new Editor();
+        // set single values
+        editor.new_game().set_player_location(model.player.location_id);
+        // set locations
+        for (var i=0; i<model.locations.length; i++) {
+            // get location settings from json
+            var location_settings = model.locations[i];
+            // set single values
+            var lf = editor.factory.location
+                .new()
+                .id(location_settings.id)
+                .set_state(location_settings.state);
+            // set texts for states
+            for (var state in location_settings.texts) { lf.set_text(state, location_settings.texts[state]); }
+            // set links
+            for (var j=0; j<location_settings.links.length; j++) {
+                var link_settings = location_settings.links[j];
+                lf.add_link(link_settings.target_id, link_settings.text, link_settings.state);
+            }
+            // location set, build
+            var l = lf.build();
+            // add to location repository
+            editor.add_location(l);
+        }
+        // set actions
+
+
+
+        return editor.start_game();
+    }
 }
 
 // Game engine
@@ -177,15 +210,15 @@ var LocationFactory = function() {
     this.for = function(location) { this.l = location; return this; }
     this.id = function(location_id) { this.l.id = location_id; return this; }
     // sets state of location
-    this.state = function(location_state) { this.l.state = location_state; return this; }
+    this.set_state = function(state) { this.l.state = state; return this; }
     // adds text to the location for given state
-    this.set_text = function(location_state, location_text) { this.l.set_text(location_state, location_text); return this; }
+    this.set_text = function(state, text) { this.l.set_text(state, text); return this; }
     // adds link to the location
     this.add_link = function(target_id, text, state) { 
         var link = new Link();
         link.target_id = target_id;
         link.text = text;
-        if (typeof state != undefined) { link.state = state; }
+        if (typeof state !== "undefined") { link.state = state; }
         this.l.add_link(link);
         return this;
     }
