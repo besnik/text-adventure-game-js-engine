@@ -15,10 +15,6 @@ var Editor = function() {
     this.from_json = function(json_data) { this.game = new EngineSerializer().from_json(json_data); return this; }
     // returns game engine object ready to be played
     this.start_game = function() { this.game.see(); return this.game; }
-    // specifies event 
-    this.when = function(event_type, params) {}
-    // specifies action for an event
-    this.do = function(operation, params) {}
     // adds location to the game engine
     this.add_location = function(l) { this.game.locations.add(l); return this; }
     // sets player location
@@ -35,15 +31,17 @@ var Editor = function() {
 var ActionSelector = function(editor, event_type, condition) {
     this.editor = editor;
     this.event_type = event_type;
-    this.condition = typeof condition !== 'undefined' ? condition : new NoCondition();
+    this.condition = condition;
 
     this.set_state_of_location = function(location_id, new_state) {
         // couple condition and action as single entity
-        var action = new SetLocationStateAction(location_id, new_state, condition);
-        // store entity (so editor can later render json if needed)
-        this.editor.game.actions.push(action);
-        // bind entity to event
-        this.editor.game.events.subscribe(this.event_type, function(data) { action.execute(data.engine); });
+        var action = new SetLocationStateAction(location_id, new_state, false);
+        // wrap conditions and actions together for the event type
+        var ac = new ActionContainer(this.event_type);
+        // add condition and action
+        ac.add(this.condition, action);
+        // store action container in engine
+        this.editor.game.actions.add(ac);
         // back to editor to allow fluent interface
         return this.editor;
     }
@@ -67,13 +65,12 @@ var EngineSerializer = function() {
     // todo: refactor to condition_factory so there is single method to instantiate conditions
     // parses model from json into Condtion model
     this.condition_parser = {};
-    this.condition_parser["NoCondition"] = function(c) { return new NoCondition(); }
     this.condition_parser["LocationCondition"] = function(c) { return new LocationCondition(c.location_id); }
 
     // todo: refactor to action_factory so there is single method to instantiate action
     // parses model from json into Action model
     this.action_parser = {}
-    this.action_parser["SetLocationStateAction"] = function(a,c) { return new SetLocationStateAction(a.location_id, a.new_state, c, a.repeat) }
+    this.action_parser["SetLocationStateAction"] = function(a) { return new SetLocationStateAction(a.location_id, a.new_state, a.repeat) }
 
     // deserializes game engine from json data
     this.from_json = function(json_data) {
@@ -105,7 +102,7 @@ var EngineSerializer = function() {
             editor.add_location(l);
         }
         // set actions
-        for (var i=0; i<model.actions.length; i++) {
+        /*for (var i=0; i<model.actions.length; i++) {
             // get settings from parsed json
             var action_settings = model.actions[i];
             // reconstruct condition
@@ -115,7 +112,7 @@ var EngineSerializer = function() {
 
             // todo: subscribe for event (need instance of editor/game engine)
             // where is good place to store event_type? condition, action, separated?-.for(event).when().do()
-        }
+        }*/
 
 
         return editor.start_game();
@@ -131,8 +128,12 @@ var Engine = function() {
     this.locations = new LocationRepository();
     // events engine
     this.events = new PubSub();
-    // list of actions with conditions to be executed for an event. used only by editor to render json.
-    this.actions = [];
+    // actions to be executed in case of event
+    this.actions = new ActionRepository();
+    // executes configured actions for given event and state of engine
+    this.execute_actions = function(e, data) { data.engine.actions.execute(e, data.engine); }
+    // subscribe to get all events after subscribed event handlers were executed;
+    this.events.event_published_callback = this.execute_actions;
     // get current location
     this.location = function() { return this.locations.get(this.player.location_id); }
     // print what you see in current location
@@ -157,6 +158,61 @@ var Engine = function() {
     }
 }
 
+// stores all action containers categorized by event_type
+var ActionRepository = function() {
+    // dict. key: event_type, value: array of ActionContainer
+    this.items = {}
+    // adds action container into list
+    this.add = function(ac) {
+        // lazily create array of action containers
+        if (this.items[ac.event_type] == undefined) { this.items[ac.event_type] = []; }
+        // add action container into list
+        this.items[ac.event_type].push(ac);
+    }
+
+    // removes action container from list
+    this.remove = function(ac) {
+        if (this.items[ac.event_type] == undefined) { return; }
+        this.items[ac.event_type].find(function(e,i,a) {
+            if (e == ac) { a.splice(i, 1); return true; }
+        });
+    }
+
+    // execute all registered action containers for given event
+    this.execute = function(event_type, engine) {
+        if (typeof event_type != "string") { throw new Error("ArgumentException: event_type. Expecting string. Actual value " + e); }
+        if (typeof engine != "object") { throw new Error("ArgumentException: engine. Did you specify engine in data when firing event? Expecting object. Actual value " + listener); }
+
+        // see if there is any action cotainer registered for the event
+        if (this.items[event_type] == undefined) { return; }
+        // execute
+        this.items[event_type].forEach(function(ac) { ac.execute(engine); });
+    }
+}
+
+// Action container holds for an event the conditions that must be true and actions that will be executed
+var ActionContainer = function(event_type) {
+    // type of event for which the list of actions is relevant
+    this.event_type = event_type;
+    // conditions that must be met
+    this.conditions = [];
+    // actions that will be executed
+    this.actions = [];
+    // adds condition to the container
+    this.add_condition = function(c) { if (typeof c == "object") { this.conditions.push(c); } }
+    // adds action to the container
+    this.add_action = function(a) { if (typeof a == "object") { this.actions.push(a); } }
+    // adds condition and action to the container
+    this.add = function(c, a) { this.add_condition(c); this.add_action(a); }
+    // validate and execute actions
+    this.execute = function(engine) {
+        // if not all conditions are valid => don't execute actions
+        if (!this.conditions.every(function(c) { return c.is_valid(engine); })) return;
+        // execute all actions
+        this.actions.forEach(function(a) { a.execute(engine); });
+    }
+}
+
 // todo: refactor to dictionary and anonymous func like condition_parser?
 // condition that checks if player entered (is already on) specific location
 var LocationCondition = function(location_id) {
@@ -168,32 +224,45 @@ var LocationCondition = function(location_id) {
     this.is_valid = function(engine) { return engine.player.location_id === this.location_id; }
 }
 
-// condition that always returns true. use when you don't want to specify condition
-var NoCondition = function() {
-    // name of type. used for json serialization
+// Logical OR condition
+var OrCondition = function(c1,c2) {
+    if (typeof c1 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c1); }
+    if (typeof c2 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c2); }
+
     this.name = this.constructor.name;
-    this.is_valid = function() { return true; }
+    this.c1 = c1;
+    this.c2 = c2;
+    this.is_valid = function(engine) { return c1.is_valid(engine) || c2.is_valid(engine); }
+}
+
+// Logical AND condition
+var AndCondition = function(c1,c2) {
+    if (typeof c1 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c1); }
+    if (typeof c2 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c2); }
+
+    this.name = this.constructor.name;
+    this.c1 = c1;
+    this.c2 = c2;
+    this.is_valid = function(engine) { return c1.is_valid(engine) && c2.is_valid(engine); }
 }
 
 // action that changes state of specific location if condition is meet
-var SetLocationStateAction = function(location_id, new_state, condition, repeat) {
+var SetLocationStateAction = function(location_id, new_state, repeat) {
     // name of type. used for json serialization
     this.name = this.constructor.name;
     // id of location whose state is going to be modified
     this.location_id = location_id;
     // new state of specified location
     this.new_state = new_state;
-    // condition that needs to be true so the state of location is changed
-    this.condition = typeof condition !== 'undefined' ? condition : new NoCondition();
     // should action be executed only once or every time the event and condition are met
     this.repeat = typeof repeat !== 'undefined' ? repeat : false;
     // flag to indicate if action ran once
     this.executed = false;
     // executes action if conditions are met
     this.execute = function(engine) {
-        // if allowed repeated execution => check for validy and execute
-        // if repeated execution is not allowed and action haven't ran yet => check for validity and execute
-        if ((this.repeat || !this.executed) && condition.is_valid(engine)) { 
+        // if allowed repeated execution => execute
+        // if disallowed repeated execution and action haven't ran yet => execute
+        if (this.repeat || !this.executed) { 
             engine.locations.get(this.location_id).state = this.new_state;
             this.executed = true;
         }
@@ -282,6 +351,8 @@ var LocationRepository = function() {
 var PubSub = function() {
     // array of events. every event contains array of subscribed functions
     this.events = {};
+    // event published callback
+    this.event_published_callback = null;
     // subscribes listener for given event
     this.subscribe = function(e, listener) {
         if (typeof e != "string") { throw new Error("ArgumentException: e. Expecting string. Actual value " + e); }
@@ -295,11 +366,16 @@ var PubSub = function() {
     this.publish = function(e, data) {
         if (typeof e != "string") { throw new Error("ArgumentException: e. Expecting string. Actual value " + e); }
         // quit if there are no subscribers
-        if (this.events[e] == undefined) { return; }
-        // call all subscribers
-        for (var i in this.events[e]) {
-            // IMPORTANT: function will be executed under context of caller! this means context of "this" keyword will change
-            this.events[e][i](data);
+        if (this.events[e] != undefined) { 
+            // call all subscribers
+            for (var i in this.events[e]) {
+                // IMPORTANT: function will be executed under context of caller! this means context of "this" keyword will change
+                this.events[e][i](data);
+            }
+        }
+        // notify callback that event handlers for the event were executed
+        if (typeof this.event_published_callback == "function") {
+            this.event_published_callback(e, data);
         }
     }
 }
