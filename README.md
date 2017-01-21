@@ -42,7 +42,7 @@ game = editor.new_game()
 The engine also supports methods like `.to_json()` and `.from_json(data)` to 
 easily export and import game configuration.  
 
-Game Engine also offers rich set of fluet APIs to play game.
+Game Engine also offers rich set of fluent APIs to play game.
 
 ```
 game.see();
