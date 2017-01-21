@@ -235,6 +235,26 @@ var OrCondition = function(c1,c2) {
     this.is_valid = function(engine) { return c1.is_valid(engine) || c2.is_valid(engine); }
 }
 
+// creates logical condition with injected validation logic
+var CreateLogicalCondition = function(is_valid_func) {
+
+    // using closure returns function with injected validation logic (is_valid_func)
+    var LogicalCondition = function(c1, c2) {
+        if (typeof c1 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c1); }
+        if (typeof c2 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c2); }
+
+        this.name = this.constructor.name;
+        this.c1 = c1;
+        this.c2 = c2;
+        this.is_valid = function(engine) { return is_valid_func(this.c1, this.c2, engine); }
+    }
+    return LogicalCondition;
+}
+
+// todo: test if it works
+var Or2Condition = CreateLogicalCondition(function(c1, c2, engine) {return c1.is_valid(engine) || c2.is_valid(engine);});
+var And2Condition = CreateLogicalCondition(function(c1, c2, engine) {return c1.is_valid(engine) && c2.is_valid(engine);});
+
 // Logical AND condition
 var AndCondition = function(c1,c2) {
     if (typeof c1 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c1); }
