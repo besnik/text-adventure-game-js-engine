@@ -266,6 +266,38 @@ var CreateLogicalCondition = function(is_valid_func) {
 var Or2Condition = CreateLogicalCondition(function(c1, c2, engine) {return c1.is_valid(engine) || c2.is_valid(engine);});
 var And2Condition = CreateLogicalCondition(function(c1, c2, engine) {return c1.is_valid(engine) && c2.is_valid(engine);});
 
+// Class factory
+var CreateActionClass = function(className, execute_func) {
+
+    var ActionTemplate = function(args, repeat) {
+        // name of type. used for json serialization
+        this.className = className //this.constructor.name;
+        // store arguments
+        this.args = args;
+        // should action be executed only once or every time the event and condition are met
+        this.repeat = typeof repeat !== 'undefined' ? repeat : false;
+        // flag to indicate if action ran once
+        this.executed = false;
+        // executes action if conditions are met
+        this.execute = function(engine) {
+            // if allowed repeated execution => execute
+            // if disallowed repeated execution and action haven't ran yet => execute
+            if (this.repeat || !this.executed) { 
+                execute_func(engine, this.args);
+                this.executed = true;
+            }
+        }
+    }
+
+    // return class (not instance!)
+    return ActionTemplate;
+}
+
+// Class definition (builds class, not instance)
+var SetLocationStateAction2 = CreateActionClass("SetLocationStateAction2", function(engine, args) {
+    engine.locations.get(args.location_id).state = args.new_state;
+});
+
 // action that changes state of specific location if condition is meet
 var SetLocationStateAction = function(location_id, new_state, repeat) {
     // name of type. used for json serialization

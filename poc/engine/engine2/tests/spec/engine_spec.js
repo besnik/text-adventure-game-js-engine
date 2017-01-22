@@ -391,5 +391,56 @@ describe("SetLocationStateAction", function() {
 
 }); // SetLocationStateAction
 
+describe("SetLocationStateAction2 - impl using closures", function() {
+
+    it("Execute action with repeat enabled (allow multiple executions)", function() {
+        // arrange
+        var l = { state: "default" };
+        var engineMock = {
+            locations: {
+                get: function(id) { if (id != "l2") throw 1; return l; }
+            }
+        };
+        // Instance definition (creates instance of dynamically created class)
+        var a = new SetLocationStateAction2(
+            { location_id: "l2", new_state: "new_state" }, true
+        );
+        // act
+        a.execute(engineMock);
+        // assert
+        expect(l.state).toBe("new_state");
+        // set location back to original state
+        l.state = "default";
+        // act - again change the state
+        a.execute(engineMock);
+        // assert
+        expect(l.state).toBe("new_state");
+    });
+
+    it("Execute action with repeat disabled (allow single execution)", function() { 
+        // arrange
+        var l = { state: "default" };
+        var engineMock = {
+            locations: {
+                get: function(id) { if (id != "l2") throw 1; return l; }
+            }
+        };
+        // Instance definition (creates instance of dynamically created class)
+        var a = new SetLocationStateAction2(
+            { location_id: "l2", new_state: "new_state" }
+        );
+        // act
+        a.execute(engineMock);
+        // assert
+        expect(l.state).toBe("new_state");
+        // set location back to original state
+        l.state = "default";
+        // act - again change the state
+        a.execute(engineMock);
+        // assert
+        expect(l.state).toBe("default");
+    });
+
+}); // SetLocationStateAction2
 
 });
