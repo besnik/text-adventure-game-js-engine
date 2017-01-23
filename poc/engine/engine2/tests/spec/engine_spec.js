@@ -333,17 +333,17 @@ describe("Location", function() {
 describe("SetLocationStateAction", function() {
 
     it("Create", function() {
-        var a = new SetLocationStateAction("l2","new_state", true);
-        expect(a.name).toBeDefined();
-        expect(a.location_id).toBe("l2");
-        expect(a.new_state).toBe("new_state");
+        var a = new SetLocationStateAction({location_id: "l2", new_state: "new_state"}, true);
+        expect(a.className).toBeDefined();
+        expect(a.args.location_id).toBe("l2");
+        expect(a.args.new_state).toBe("new_state");
         expect(a.repeat).toBe(true);
         expect(a.executed).toBe(false);
         expect(a.execute).toBeDefined();
     });
 
     it("Create without repeat", function() {
-        var a = new SetLocationStateAction("l2","new_state");
+        var a = new SetLocationStateAction({location_id: "l2", new_state: "new_state"});
         expect(a.repeat).toBe(false);
     });
 
@@ -355,56 +355,8 @@ describe("SetLocationStateAction", function() {
                 get: function(id) { if (id != "l2") throw 1; return l; }
             }
         };
-        var a = new SetLocationStateAction("l2","new_state", true);
-        // act
-        a.execute(engineMock);
-        // assert
-        expect(l.state).toBe("new_state");
-        // set location back to original state
-        l.state = "default";
-        // act - again change the state
-        a.execute(engineMock);
-        // assert
-        expect(l.state).toBe("new_state");
-    });
-
-    it("Execute action with repeat disabled (allow single execution)", function() {
-        // arrange
-        var l = { state: "default" };
-        var engineMock = {
-            locations: {
-                get: function(id) { if (id != "l2") throw 1; return l; }
-            }
-        };
-        var a = new SetLocationStateAction("l2","new_state", false);
-        // act
-        a.execute(engineMock);
-        // assert
-        expect(l.state).toBe("new_state");
-        // set location back to original state
-        l.state = "default";
-        // act - execute again, this time state should not be changed
-        a.execute(engineMock);
-        // assert
-        expect(l.state).toBe("default");
-    });
-
-}); // SetLocationStateAction
-
-describe("SetLocationStateAction2 - impl using closures", function() {
-
-    it("Execute action with repeat enabled (allow multiple executions)", function() {
-        // arrange
-        var l = { state: "default" };
-        var engineMock = {
-            locations: {
-                get: function(id) { if (id != "l2") throw 1; return l; }
-            }
-        };
         // Instance definition (creates instance of dynamically created class)
-        var a = new SetLocationStateAction2(
-            { location_id: "l2", new_state: "new_state" }, true
-        );
+        var a = new SetLocationStateAction({location_id: "l2",new_state: "new_state" }, true);
         // act
         a.execute(engineMock);
         // assert
@@ -426,9 +378,7 @@ describe("SetLocationStateAction2 - impl using closures", function() {
             }
         };
         // Instance definition (creates instance of dynamically created class)
-        var a = new SetLocationStateAction2(
-            { location_id: "l2", new_state: "new_state" }
-        );
+        var a = new SetLocationStateAction({ location_id: "l2", new_state: "new_state" });
         // act
         a.execute(engineMock);
         // assert
@@ -441,6 +391,224 @@ describe("SetLocationStateAction2 - impl using closures", function() {
         expect(l.state).toBe("default");
     });
 
-}); // SetLocationStateAction2
+}); // SetLocationStateAction
+
+describe("Logical Conditions AND", function() {
+
+    var c_true = { is_valid: function(engine) {return true;} }
+    var c_false = { is_valid: function(engine) {return false;} }
+
+    it("Create", function() {
+        var ca = new AndCondition(c_true, c_false);
+        expect(ca.className).toBe("AndCondition");
+        expect(ca.c1).toBe(c_true);
+        expect(ca.c2).toBe(c_false);
+    });
+
+    it("AND: true, true", function() {
+        var ca = new AndCondition(c_true, c_true);
+        var r = ca.is_valid({});
+        expect(r).toBe(true);
+    });
+
+    it("AND: true, false", function() {
+        var ca = new AndCondition(c_true, c_false);
+        var r = ca.is_valid({});
+        expect(r).toBe(false);
+    });
+
+    it("AND: false, true", function() {
+        var ca = new AndCondition(c_false, c_true);
+        var r = ca.is_valid({});
+        expect(r).toBe(false);
+    });
+
+    it("AND: false, false", function() {
+        var ca = new AndCondition(c_false, c_false);
+        var r = ca.is_valid({});
+        expect(r).toBe(false);
+    });
+
+}); // Logical Conditions AND
+
+describe("Logical Conditions OR", function() {
+
+    var c_true = { is_valid: function(engine) {return true;} }
+    var c_false = { is_valid: function(engine) {return false;} }
+
+    it("Create", function() {
+        var ca = new OrCondition(c_true, c_false);
+        expect(ca.className).toBe("OrCondition");
+        expect(ca.c1).toBe(c_true);
+        expect(ca.c2).toBe(c_false);
+    });
+
+    it("OR: true, true", function() {
+        var ca = new OrCondition(c_true, c_true);
+        var r = ca.is_valid({});
+        expect(r).toBe(true);
+    });
+
+    it("OR: true, false", function() {
+        var ca = new OrCondition(c_true, c_false);
+        var r = ca.is_valid({});
+        expect(r).toBe(true);
+    });
+
+    it("OR: false, true", function() {
+        var ca = new OrCondition(c_false, c_true);
+        var r = ca.is_valid({});
+        expect(r).toBe(true);
+    });
+
+    it("OR: false, false", function() {
+        var ca = new OrCondition(c_false, c_false);
+        var r = ca.is_valid({});
+        expect(r).toBe(false);
+    });
+
+}); // Logical Conditions OR
+
+describe("LocationCondition", function() {
+
+    it("Create", function() {
+        var c = new LocationCondition("l2");
+        expect(c.className).toBe("LocationCondition");
+        expect(c.location_id).toBe("l2");
+    });
+
+    it("Valid condition", function() {
+        var c = new LocationCondition("l2");
+        var r = c.is_valid({player: {location_id: "l2"}});
+        expect(r).toBe(true); 
+    });
+
+    it("Invalid condition", function() {
+        var c = new LocationCondition("l2");
+        var r = c.is_valid({player: {location_id: "l3"}});
+        expect(r).toBe(false); 
+    });
+
+}); // LocationCondition
+
+describe("EventHandler", function() {
+
+    it("Create", function() {
+        var ac = new EventHandler("changed");
+        expect(ac.event_type).toBe("changed");
+        expect(ac.conditions).toBeDefined();
+        expect(ac.conditions.length).toBe(0);
+        expect(ac.actions).toBeDefined();
+        expect(ac.actions.length).toBe(0);
+    });
+
+    it("Add condition", function() {
+        var ac = new EventHandler("changed");
+        var c = {};
+        ac.add_condition(c);
+        expect(ac.conditions.length).toBe(1);
+        expect(ac.conditions[0]).toBe(c);
+    });
+
+    it("Add action", function() {
+        var ac = new EventHandler("changed");
+        var a = {};
+        ac.add_action(a);
+        expect(ac.actions.length).toBe(1);
+        expect(ac.actions[0]).toBe(a);
+    });
+
+    it("Add condition & action", function() {
+        var ac = new EventHandler("changed");
+        var c = {}, a = {};
+        ac.add(c,a);
+        expect(ac.conditions.length).toBe(1);
+        expect(ac.conditions[0]).toBe(c);
+        expect(ac.actions.length).toBe(1);
+        expect(ac.actions[0]).toBe(a);
+    });
+
+    var c_true = { is_valid: function(engine) {return true;} }
+    var c_false = { is_valid: function(engine) {return false;} }
+
+    var DummyAction = function() {
+        this.executed = false;
+        this.execute = function(engine) { this.executed = true; }
+    }
+
+    it("Execute: True, True, Action, Action", function() {
+        var ac = new EventHandler("changed");
+        var a1 = new DummyAction(), a2 = new DummyAction();
+        ac.add(c_true, a1);
+        ac.add(c_true, a2);
+        ac.execute({});
+        expect(a1.executed).toBe(true);
+        expect(a2.executed).toBe(true);
+    });
+
+    it("Execute: True, False, Action, Action", function() {
+        var ac = new EventHandler("changed");
+        var a1 = new DummyAction(), a2 = new DummyAction();
+        ac.add(c_true, a1);
+        ac.add(c_false, a2);
+        ac.execute({});
+        expect(a1.executed).toBe(false);
+        expect(a2.executed).toBe(false);
+    });
+
+    it("Execute: False, True, Action, Action", function() {
+        var ac = new EventHandler("changed");
+        var a1 = new DummyAction(), a2 = new DummyAction();
+        ac.add(c_false, a1);
+        ac.add(c_true, a2);
+        ac.execute({});
+        expect(a1.executed).toBe(false);
+        expect(a2.executed).toBe(false);
+    });
+
+    it("Execute: False, False, Action, Action", function() {
+        var ac = new EventHandler("changed");
+        var a1 = new DummyAction(), a2 = new DummyAction();
+        ac.add(c_false, a1);
+        ac.add(c_false, a2);
+        ac.execute({});
+        expect(a1.executed).toBe(false);
+        expect(a2.executed).toBe(false);
+    });
+
+    it("Execute: True AND True, Action, Action", function() {
+        var ac = new EventHandler("changed");
+        var a1 = new DummyAction(), a2 = new DummyAction();
+        ac.add_condition(new AndCondition(c_true, c_true));
+        ac.add_action(a1);
+        ac.add_action(a2);
+        ac.execute({});
+        expect(a1.executed).toBe(true);
+        expect(a2.executed).toBe(true);
+    });
+
+    it("Execute: True AND False, Action, Action", function() {
+        var ac = new EventHandler("changed");
+        var a1 = new DummyAction(), a2 = new DummyAction();
+        ac.add_condition(new AndCondition(c_true, c_false));
+        ac.add_action(a1);
+        ac.add_action(a2);
+        ac.execute({});
+        expect(a1.executed).toBe(false);
+        expect(a2.executed).toBe(false);
+    });
+
+    it("Execute: True OR False, Action, Action", function() {
+        var ac = new EventHandler("changed");
+        var a1 = new DummyAction(), a2 = new DummyAction();
+        ac.add_condition(new OrCondition(c_true, c_false));
+        ac.add_action(a1);
+        ac.add_action(a2);
+        ac.execute({});
+        expect(a1.executed).toBe(true);
+        expect(a2.executed).toBe(true);
+    });
+
+}); // ActionContainer
 
 });

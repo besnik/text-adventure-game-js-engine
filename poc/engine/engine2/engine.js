@@ -35,13 +35,13 @@ var ActionSelector = function(editor, event_type, condition) {
 
     this.set_state_of_location = function(location_id, new_state) {
         // couple condition and action as single entity
-        var action = new SetLocationStateAction(location_id, new_state, false);
+        var action = new SetLocationStateAction({location_id: location_id, new_state: new_state}, false);
         // wrap conditions and actions together for the event type
-        var ac = new ActionContainer(this.event_type);
+        var ac = new EventHandler(this.event_type);
         // add condition and action
         ac.add(this.condition, action);
         // store action container in engine
-        this.editor.game.actions.add(ac);
+        this.editor.game.event_handlers.add(ac);
         // back to editor to allow fluent interface
         return this.editor;
     }
@@ -129,11 +129,9 @@ var Engine = function() {
     // events engine
     this.events = new PubSub();
     // actions to be executed in case of event
-    this.actions = new ActionRepository();
-    // executes configured actions for given event and state of engine
-    this.execute_actions = function(e, data) { data.engine.actions.execute(e, data.engine); }
+    this.event_handlers = new EventHandlers();
     // subscribe to get all events after subscribed event handlers were executed;
-    this.events.event_published_callback = this.execute_actions;
+    this.events.event_published_callback = function(e, data) { data.engine.event_handlers.execute(e, data.engine); }
     // get current location
     this.location = function() { return this.locations.get(this.player.location_id); }
     // print what you see in current location
@@ -158,9 +156,9 @@ var Engine = function() {
     }
 }
 
-// stores all action containers categorized by event_type
-var ActionRepository = function() {
-    // dict. key: event_type, value: array of ActionContainer
+// stores all action containers (actions (event handlers) for specified event) categorized by event_type
+var EventHandlers = function() {
+    // dict. key: event_type, value: array of EventHandler
     this.items = {}
     // adds action container into list
     this.add = function(ac) {
@@ -190,11 +188,11 @@ var ActionRepository = function() {
     }
 }
 
-// Action container holds for an event the conditions that must be true and actions that will be executed
-var ActionContainer = function(event_type) {
+// Holds for an event the conditions that must be true and actions that will be executed
+var EventHandler = function(event_type) {
     // type of event for which the list of actions is relevant
     this.event_type = event_type;
-    // conditions that must be met
+    // conditions that all (AND) must be met
     this.conditions = [];
     // actions that will be executed
     this.actions = [];
@@ -217,61 +215,47 @@ var ActionContainer = function(event_type) {
 // condition that checks if player entered (is already on) specific location
 var LocationCondition = function(location_id) {
     // name of type. used for json serialization
-    this.name = this.constructor.name;
+    this.className = this.constructor.name;
     // id of location where player must be located so the condition is true
     this.location_id = location_id;
     // validates state of model
     this.is_valid = function(engine) { return engine.player.location_id === this.location_id; }
 }
 
-// Logical OR condition
-var OrCondition = function(c1,c2) {
-    if (typeof c1 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c1); }
-    if (typeof c2 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c2); }
-
-    this.name = this.constructor.name;
-    this.c1 = c1;
-    this.c2 = c2;
-    this.is_valid = function(engine) { return c1.is_valid(engine) || c2.is_valid(engine); }
-}
-
-// Logical AND condition
-var AndCondition = function(c1,c2) {
-    if (typeof c1 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c1); }
-    if (typeof c2 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c2); }
-
-    this.name = this.constructor.name;
-    this.c1 = c1;
-    this.c2 = c2;
-    this.is_valid = function(engine) { return c1.is_valid(engine) && c2.is_valid(engine); }
-}
-
 // creates logical condition with injected validation logic
-var CreateLogicalCondition = function(is_valid_func) {
+var CreateLogicalConditionClass = function(className, is_valid_func) {
 
     // using closure returns function with injected validation logic (is_valid_func)
-    var LogicalCondition = function(c1, c2) {
+    var LogicalConditionTemplate = function(c1, c2) {
         if (typeof c1 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c1); }
         if (typeof c2 != "object") { throw new Error("ArgumentException: c1. Expecting a Condition object. Actual value " + c2); }
-
-        this.name = this.constructor.name;
+        // name of type. used for json serialization
+        this.className = className;
+        // left condition instance
         this.c1 = c1;
+        // right condition instance
         this.c2 = c2;
+        // validates left and right condition using supplied func (and/or)
         this.is_valid = function(engine) { return is_valid_func(this.c1, this.c2, engine); }
     }
-    return LogicalCondition;
+    return LogicalConditionTemplate;
 }
 
-// todo: test if it works
-var Or2Condition = CreateLogicalCondition(function(c1, c2, engine) {return c1.is_valid(engine) || c2.is_valid(engine);});
-var And2Condition = CreateLogicalCondition(function(c1, c2, engine) {return c1.is_valid(engine) && c2.is_valid(engine);});
+// Logical OR Condition
+var OrCondition = CreateLogicalConditionClass("OrCondition", function(c1, c2, engine) {
+    return c1.is_valid(engine) || c2.is_valid(engine);
+});
+// Logical AND Condition
+var AndCondition = CreateLogicalConditionClass("AndCondition", function(c1, c2, engine) {
+    return c1.is_valid(engine) && c2.is_valid(engine);
+});
 
 // Class factory
 var CreateActionClass = function(className, execute_func) {
 
     var ActionTemplate = function(args, repeat) {
         // name of type. used for json serialization
-        this.className = className //this.constructor.name;
+        this.className = className;
         // store arguments
         this.args = args;
         // should action be executed only once or every time the event and condition are met
@@ -294,32 +278,9 @@ var CreateActionClass = function(className, execute_func) {
 }
 
 // Class definition (builds class, not instance)
-var SetLocationStateAction2 = CreateActionClass("SetLocationStateAction2", function(engine, args) {
+var SetLocationStateAction = CreateActionClass("SetLocationStateAction", function(engine, args) {
     engine.locations.get(args.location_id).state = args.new_state;
 });
-
-// action that changes state of specific location if condition is meet
-var SetLocationStateAction = function(location_id, new_state, repeat) {
-    // name of type. used for json serialization
-    this.name = this.constructor.name;
-    // id of location whose state is going to be modified
-    this.location_id = location_id;
-    // new state of specified location
-    this.new_state = new_state;
-    // should action be executed only once or every time the event and condition are met
-    this.repeat = typeof repeat !== 'undefined' ? repeat : false;
-    // flag to indicate if action ran once
-    this.executed = false;
-    // executes action if conditions are met
-    this.execute = function(engine) {
-        // if allowed repeated execution => execute
-        // if disallowed repeated execution and action haven't ran yet => execute
-        if (this.repeat || !this.executed) { 
-            engine.locations.get(this.location_id).state = this.new_state;
-            this.executed = true;
-        }
-    }
-}
 
 // Location
 var Location = function() {
