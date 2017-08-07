@@ -62,6 +62,12 @@ Also one of the long term goals is to provide API to easily integrate with major
 provides like AWS or Google Cloud to store game data (both game configurations and sessions)
 for even more interesting game experience.
 
+# Important concepts
+
+- [Inheritance](/concepts/inheritance.md)
+- [Namespaces](/concepts/namespaces.md)
+- [publish-subscribe](/concepts/publish-subscribe.md)
+
 # Feedback
 
 I'd love to get feedback on this project, design of engine, roadmap or any new ideas!

@@ -1,15 +1,15 @@
-<script type="text/javascript">
-/*
+# Inheritance
+
  This code shows how to define classes and setup inheritance in plain javascript.
  Idea is to modify prototype of child class with new instance of base class. There 
  has to be new instanance of base for every new child otherwise they would be sharing
  properties.
  Second step is to call constructor of base class in child constructor to ensure all props
  are properly initialized.
-*/
 
 
-/*
+
+
 Helper method to setup inheritance of objects
 Parameters
 	derived - derived class we want to decorate with base class functionality
@@ -20,7 +20,9 @@ Parameters
 		   of the method (parent ctor) is called in context of current (derived)
 		   instance. See also documenation for javascript "call" and "apply" for
 		   more details (e.g. passing parameters).
-**********************************************/
+
+
+```
 function setupInheritance(derived, base)
 {
 	derived.prototype = new base();
@@ -60,4 +62,4 @@ document.write(a.getVal());
 document.write("<br>");
 document.write(b.getVal());
 
-</script>
+```

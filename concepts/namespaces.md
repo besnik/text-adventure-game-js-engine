@@ -1,4 +1,6 @@
-<script type="text/javascript">
+# Namespaces
+
+```
 
 /* Generic function to create namespace object with optional namespace sub-objects
 	Usage: var ns = namespace("MyCompany.MyProduct.Model"); 
@@ -61,4 +63,4 @@ document.write(a.getVal());
 document.write("<br>");
 document.write(b.getVal());
 
-</script>
+```

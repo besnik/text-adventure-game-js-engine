@@ -1,4 +1,6 @@
-<script type="text/javascript">
+# Publish Subscribe
+
+```
 
 // Implementation of publisher-subscriber pattern
 var PubSub = function() {
@@ -43,4 +45,4 @@ p.subscribe("test", writeln);
 p.subscribe("test", writeln);
 p.publish("test", "hello world");
 
-</script>
+```
