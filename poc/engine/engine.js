@@ -92,6 +92,7 @@ var EngineSerializer = function() {
             // set texts for states
             for (var state in location_settings.texts) { lf.set_text(state, location_settings.texts[state]); }
             // set links
+            console.log(location_settings)
             for (var j=0; j<location_settings.links.length; j++) {
                 var link_settings = location_settings.links[j];
                 lf.add_link(link_settings.target_id, link_settings.text, link_settings.state);
@@ -121,7 +122,7 @@ var EngineSerializer = function() {
 
 // Game engine
 // Use game engine to play game using available APIs
-var Engine = function() {
+var Engine = function(gameJSON) {
     // state of player
     this.player = new Player();
     // locations with state
@@ -140,6 +141,13 @@ var Engine = function() {
         var data = this.publish.update_ui({ engine: this });
         return this;
     }
+
+    // Evaluate text input
+
+    this.interact = function(interaction) {
+        console.log(this.player)
+    }
+
     // go to specific location
     this.go = function(location_id) {
         // change location of player

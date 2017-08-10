@@ -1,0 +1,7 @@
+{
+  "name": "text-adventure-game-js-engine",
+  "version": "0.0.1",
+  "description": "Goal of the project is to create game engine and editor with rich and fluent API to create text-like games using javascript and other modern technologies for new age.",
+  "repository": "https://github.com/besnik/text-adventure-game-js-engine",
+  "author": "besnik"
+}

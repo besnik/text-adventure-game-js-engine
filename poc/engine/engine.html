@@ -13,7 +13,7 @@
         <div id="location"></div>
         <div id="go"></div>
     </div>
-    
+    <script type="text/javascript" src="./game_data.json"></script>
     <script>
         // VIEW
         function to_view_data(engine) {
@@ -46,43 +46,46 @@
 
         // SETUP GAME
         var editor = new Editor();
+        
+        // Programaitcally create game data
+        // var l1 = editor.factory.location
+        //     .new()
+        //     .id("l1")
+        //     .set_text("default", "l1 location text")
+        //     .set_text("modified", "l1 modified location text")
+        //     .add_link("l2", "to l2")
+        //     .build();
 
-        var l1 = editor.factory.location
-            .new()
-            .id("l1")
-            .set_text("default", "l1 location text")
-            .set_text("modified", "l1 modified location text")
-            .add_link("l2", "to l2")
-            .build();
+        // var l2 = editor.factory.location
+        //     .new()
+        //     .id("l2")
+        //     .set_text("default", "l2 location text")
+        //     .add_link("l1", "to l1")
+        //     .build();
 
-        var l2 = editor.factory.location
-            .new()
-            .id("l2")
-            .set_text("default", "l2 location text")
-            .add_link("l1", "to l1")
-            .build();
+        // game = editor.new_game()
+        //     .add_location(l1)
+        //     .add_location(l2)
+        //     .set_player_location(l1.id)
+        //     .add_listener("update_ui", update_ui)
+        //     .add_listener("location_changed", update_ui)
+        //     .when_location_changed_to("l2").set_state_of_location("l1", "modified")
+        //     .start_game();
 
-        game = editor.new_game()
-            .add_location(l1)
-            .add_location(l2)
-            .set_player_location(l1.id)
-            .add_listener("update_ui", update_ui)
-            .add_listener("location_changed", update_ui)
-            .when_location_changed_to("l2").set_state_of_location("l1", "modified")
-            .start_game();
+        // json_data = editor.new_game()
+        //     .add_location(l1)
+        //     .add_location(l2)
+        //     .set_player_location(l1.id)
+        //     .add_listener("update_ui", update_ui)
+        //     .add_listener("location_changed", update_ui)
+        //     .when_location_changed_to("l2").set_state_of_location("l1", "modified")
+        //     .to_json();
+        // console.log(json_data);
 
-        json_data = editor.new_game()
-            .add_location(l1)
-            .add_location(l2)
-            .set_player_location(l1.id)
-            .add_listener("update_ui", update_ui)
-            .add_listener("location_changed", update_ui)
-            .when_location_changed_to("l2").set_state_of_location("l1", "modified")
-            .to_json();
-        console.log(json_data);
-/*
-        json_data2 = editor.from_json(json_data).to_json();
-        console.log(json_data2);*/
+
+        // Create game from file
+        json_data2 = editor.from_json(game_data).to_json();
+        console.log(json_data2);
 
         // PLAY GAME
         
