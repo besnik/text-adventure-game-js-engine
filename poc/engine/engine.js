@@ -2,7 +2,8 @@
 
 // Editor engine
 // Use editor engine and its API to setup or edit game
-var Editor = function() {
+export const Editor = function(json_data) {
+    this.json_data = json_data
     // holds game engine
     this.game = null;
     // initializes empty new game engine
@@ -12,7 +13,7 @@ var Editor = function() {
     // converts game engine into json text
     this.to_json = function() { return new EngineSerializer().to_json(this.game); }
     // loads game configuration from json file
-    this.from_json = function(json_data) { this.game = new EngineSerializer().from_json(json_data); return this; }
+    this.from_json = function() { this.game = new EngineSerializer().from_json(this.json_data); return this; }
     // returns game engine object ready to be played
     this.start_game = function() { this.game.see(); return this.game; }
     // adds location to the game engine
@@ -28,7 +29,7 @@ var Editor = function() {
 }
 
 // Binds conditions and actions together
-var ActionSelector = function(editor, event_type, condition) {
+ var ActionSelector = function(editor, event_type, condition) {
     this.editor = editor;
     this.event_type = event_type;
     this.condition = condition;
@@ -75,28 +76,31 @@ var EngineSerializer = function() {
     // deserializes game engine from json data
     this.from_json = function(json_data) {
         // parse json string
-        var model = JSON.parse(json_data);
+        var model = json_data
         // use editor instance to reconstruct game engine using data from json
         var editor = new Editor();
         // set single values
         editor.new_game().set_player_location(model.player.location_id);
         // set locations
-        for (var i=0; i<model.locations.length; i++) {
+        for(var key in model.locations) {
             // get location settings from json
-            var location_settings = model.locations[i];
+            var location_settings = model.locations[key];
             // set single values
             var lf = editor.factory.location
                 .new()
-                .id(location_settings.id)
+                .id(key)
                 .set_state(location_settings.state);
+
+            lf.set_criteria(location_settings.criteria);
             // set texts for states
             for (var state in location_settings.texts) { lf.set_text(state, location_settings.texts[state]); }
-            // set links
-            console.log(location_settings)
-            for (var j=0; j<location_settings.links.length; j++) {
-                var link_settings = location_settings.links[j];
-                lf.add_link(link_settings.target_id, link_settings.text, link_settings.state);
-            }
+            
+            lf.set_links(location_settings.links)
+            // set links - Old Way when it was a list
+            // for (var j=0; j<location_settings.links.length; j++) {
+            //     var link_settings = location_settings.links[j];
+            //     lf.add_link(link_settings.target_id, link_settings.text, link_settings.state);
+            // }
             // location set, build
             var l = lf.build();
             // add to location repository
@@ -142,10 +146,24 @@ var Engine = function(gameJSON) {
         return this;
     }
 
-    // Evaluate text input
+    this.evaluate_criteria = (evalfunc, interaction, criteria) => {
+        for (let key in criteria) {
+            const success = evalfunc(interaction, criteria[key])
+            if (success) {
+                return key
+            }
+        }
+        return "fail"
+    }
 
-    this.interact = function(interaction) {
-        console.log(this.player)
+    // Evaluate text input
+    this.interact = (interaction) => {
+        const loc =  this.locations.get(this.player.location_id)
+        // This just a demo eval function to check for keywords in a list
+        const evalfunc = (interaction, keywordList) => { if (keywordList.indexOf(interaction) >= 0) return true }
+        const nextKey = this.evaluate_criteria(evalfunc, interaction, loc.criteria)
+        this.go(loc.links[nextKey].target_id)
+        return loc
     }
 
     // go to specific location
@@ -326,7 +344,7 @@ var LocationFactory = function() {
     this.set_state = function(state) { this.l.state = state; return this; }
     // adds text to the location for given state
     this.set_text = function(state, text) { this.l.set_text(state, text); return this; }
-    // adds link to the location
+    // adds link to the location - Old
     this.add_link = function(target_id, text, state) { 
         var link = new Link();
         link.target_id = target_id;
@@ -335,11 +353,16 @@ var LocationFactory = function() {
         this.l.add_link(link);
         return this;
     }
+    // add criteria
+    this.set_criteria = function(criteria) {this.l.criteria = criteria; return this}
+    // Add Links = 
+    this.set_links = function(links) {this.l.links = links; return this}
+
     // gets Location instance with configured data
     this.build = function() { return this.l; }
 }
 
-// Link to other Locations
+// Link to other Locations - Old
 var Link = function() {
     // target location id
     this.target_id = "default";
