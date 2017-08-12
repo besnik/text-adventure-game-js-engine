@@ -2,7 +2,7 @@
 
 // Editor engine
 // Use editor engine and its API to setup or edit game
-export const Editor = function(json_data) {
+const Editor = function(json_data) {
     this.json_data = json_data
     // holds game engine
     this.game = null;
@@ -153,7 +153,9 @@ var Engine = function(gameJSON) {
                 return key
             }
         }
-        return "fail"
+        // modify the state key
+        this.location().state = 'non-response'
+        return false
     }
 
     // Evaluate text input
@@ -162,8 +164,11 @@ var Engine = function(gameJSON) {
         // This just a demo eval function to check for keywords in a list
         const evalfunc = (interaction, keywordList) => { if (keywordList.indexOf(interaction) >= 0) return true }
         const nextKey = this.evaluate_criteria(evalfunc, interaction, loc.criteria)
-        this.go(loc.links[nextKey].target_id)
-        return loc
+        if (nextKey) {
+            this.go(loc.links[nextKey].target_id)
+        }
+        
+        return this.location()
     }
 
     // go to specific location
@@ -424,3 +429,4 @@ var PubSub = function() {
     }
 }
 
+export default Editor

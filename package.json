@@ -1,7 +1,50 @@
 {
-  "name": "text-adventure-game-js-engine",
+  "name": "text-adventure-game",
   "version": "0.0.1",
   "description": "Goal of the project is to create game engine and editor with rich and fluent API to create text-like games using javascript and other modern technologies for new age.",
-  "repository": "https://github.com/besnik/text-adventure-game-js-engine",
-  "author": "besnik"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/besnik/text-adventure-game-js-engine.git"
+  },
+  "author": "besnik",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "npm run build:umd && npm run build:umd:min && npm run build:commonjs",
+    "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
+    "build:umd": "cross-env BABEL_ENV=commonjs NODE_ENV=development webpack",
+    "build:umd:min": "cross-env BABEL_ENV=commonjs NODE_ENV=production webpack",
+    "test": "cross-env JASMINE_CONFIG_PATH=jasmine.json jasmine"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.25.0",
+    "babel-eslint": "^5.0.0-beta4",
+    "babel-loader": "^7.1.1",
+    "babel-plugin-check-es2015-constants": "^6.6.5",
+    "babel-plugin-transform-es2015-arrow-functions": "^6.5.2",
+    "babel-plugin-transform-es2015-block-scoped-functions": "^6.6.5",
+    "babel-plugin-transform-es2015-block-scoping": "^6.6.5",
+    "babel-plugin-transform-es2015-classes": "^6.6.5",
+    "babel-plugin-transform-es2015-computed-properties": "^6.6.5",
+    "babel-plugin-transform-es2015-destructuring": "^6.6.5",
+    "babel-plugin-transform-es2015-for-of": "^6.6.0",
+    "babel-plugin-transform-es2015-function-name": "^6.5.0",
+    "babel-plugin-transform-es2015-literals": "^6.5.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.6.5",
+    "babel-plugin-transform-es2015-object-super": "^6.6.5",
+    "babel-plugin-transform-es2015-parameters": "^6.6.5",
+    "babel-plugin-transform-es2015-shorthand-properties": "^6.5.0",
+    "babel-plugin-transform-es2015-spread": "^6.6.5",
+    "babel-plugin-transform-es2015-sticky-regex": "^6.5.0",
+    "babel-plugin-transform-es2015-template-literals": "^6.6.5",
+    "babel-plugin-transform-es2015-unicode-regex": "^6.5.0",
+    "babel-plugin-transform-es3-member-expression-literals": "^6.5.0",
+    "babel-plugin-transform-es3-property-literals": "^6.5.0",
+    "cross-env": "^5.0.5",
+    "jasmine": "^2.7.0",
+    "webpack": "^3.5.3"
+  },
+  "dependencies": {
+    "jasmine-node": "^1.14.5"
+  }
 }

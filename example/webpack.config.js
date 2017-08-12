@@ -1,5 +1,6 @@
+"use strict"
 var path = require('path')
-
+console.log(path.resolve(__dirname, '..', 'lib'))
 module.exports = {
   entry: ['./app'],
   output: {
@@ -14,8 +15,7 @@ module.exports = {
         loader: 'babel-loader',
         exclude: /node_modules/,
         query: {
-          presets: ['es2015', 'react', 'stage-2'],
-          plugins: ['transform-runtime']
+          presets: [require('babel-preset-es2015'), require('babel-preset-react'), require('babel-preset-stage-2')]
         }
       },
       {
@@ -28,12 +28,12 @@ module.exports = {
       },
       {
         test: /\.(jpe?g|png|gif)$/i,
-        loader: 'file-loader?name=Images/[name].[ext]'
+        loader: 'file-loader?name=images/[name].[ext]'
       }
     ]
   },
   resolve: {
-    modules: ['node_modules', path.resolve(__dirname, 'node_modules')],
+    modules: ['node_modules', path.resolve(__dirname, 'node_modules'),],
     extensions: ['.js', '.jsx', '.scss', '.css']
   }
 }

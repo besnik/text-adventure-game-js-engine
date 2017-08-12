@@ -35,9 +35,9 @@ export const gameJson = {
       "l2": {
          "state":"default",
          "texts":{  
-            "default":"l1 location text",
-            "modified":"l1 modified location text",
-            "non-response":"please try again"
+            "default":"l2 location text",
+            "modified":"l2 modified location text",
+            "non-response":"l2 please try again"
          },
          "criteria":{  
             "success":[  
@@ -65,9 +65,9 @@ export const gameJson = {
       "l3": {
          "state":"default",
          "texts":{  
-            "default":"l1 location text",
-            "modified":"l1 modified location text",
-            "non-response":"please try again"
+            "default":"l3 location text",
+            "modified":"l3 modified location text",
+            "non-response":"l3 please try again"
          },
          "criteria":{  
             "success":[  
@@ -95,9 +95,9 @@ export const gameJson = {
       "l4": {
          "state":"default",
          "texts":{  
-            "default":"l1 location text",
-            "modified":"l1 modified location text",
-            "non-response":"please try again"
+            "default":"l4 location text",
+            "modified":"l4 modified location text",
+            "non-response":"l4 please try again"
          },
          "criteria":{  
             "success":[  
@@ -125,9 +125,9 @@ export const gameJson = {
       "l5": {
          "state":"default",
          "texts":{  
-            "default":"l1 location text",
-            "modified":"l1 modified location text",
-            "non-response":"please try again"
+            "default":"l5 location text",
+            "modified":"l5 modified location text",
+            "non-response":"l5 please try again"
          },
          "criteria":{  
             "success":[  
@@ -155,9 +155,9 @@ export const gameJson = {
       "l6": {
          "state":"default",
          "texts":{  
-            "default":"l1 location text",
-            "modified":"l1 modified location text",
-            "non-response":"please try again"
+            "default":"l6 location text",
+            "modified":"l6 modified location text",
+            "non-response":"l6 please try again"
          },
          "criteria": {  
             "success":[  
@@ -185,9 +185,9 @@ export const gameJson = {
       "l7": {
          "state":"default",
          "texts":{  
-            "default":"l1 location text",
-            "modified":"l1 modified location text",
-            "non-response":"please try again"
+            "default":"l7 location text",
+            "modified":"l7 modified location text",
+            "non-response":"l7 please try again"
          },
          "criteria":{  
             "success":[  

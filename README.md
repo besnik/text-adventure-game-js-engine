@@ -6,8 +6,42 @@ to create text-like games using javascript and other modern technologies for new
 Game Engine and Game Editor are written in plain old javascript. Both game and editor engines
 should run in any modern browser (or Node.js if needed).
 
-If you are interested in latest progress check out `/poc/engine/engine2/` directory for 
-latest prototype.
+If you are interested in latest progress check out `/examples/` directory for 
+latest prototype. 
+
+# Develop
+Install dependencies
+```
+    $ yarn install
+```
+
+Create a link to the project for development.
+```
+    yarn link
+```
+
+# Build
+This creates the distribution builds of the project
+```
+    $ yarn run build
+```
+
+
+# Example
+Install dependencies, link project, start `webpack-dev-server`
+```
+    $ cd example/
+    $ yarn install
+    $ yarn link text-adventure-game
+    $ yarn run start
+```
+
+# Test
+```
+    $ yarn run test
+```
+
+
 
 # Game and Editor APIs
 
@@ -64,9 +98,9 @@ for even more interesting game experience.
 
 # Important concepts
 
-- [Inheritance](/concepts/inheritance.md)
-- [Namespaces](/concepts/namespaces.md)
-- [publish-subscribe](/concepts/publish-subscribe.md)
+- [Inheritance](/concepts/inheritance/)
+- [Namespaces](/concepts/namespaces/)
+- [publish-subscribe](/concepts/publish-subscribe/)
 
 # Feedback
 
